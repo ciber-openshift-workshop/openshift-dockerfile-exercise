@@ -131,12 +131,12 @@ The purpose of this exercise is to learn basics of:
     Containers:
       sleep:
        Image:              image-registry.openshift-image-registry.svc:5000/docker-   build/sleep@sha256:237b14f609d3ab452f7f45ba149119a5d1c97324757e8b29a0acb55b4bc8752f
-   ...
-   ```
-   Note that the deployment config has a trigger in the image stream we looked at before. If the image and 
-   thus image stream changes, a new deployment is performed. It is possible to use the hash of the Docker 
-   image to identify the image version during troubleshooting and rollbacks (since the `latest` tag gets 
-   replaced every time we push a new image version to the internal registry)
+    ...
+    ```
+    Note that the deployment config has a trigger in the image stream we looked at before. If the image and 
+    thus image stream changes, a new deployment is performed. It is possible to use the hash of the Docker 
+    image to identify the image version during troubleshooting and rollbacks (since the `latest` tag gets 
+    replaced every time we push a new image version to the internal registry)
 
 1. Check the log of the running container  
  `$ oc logs sleep-1...`
