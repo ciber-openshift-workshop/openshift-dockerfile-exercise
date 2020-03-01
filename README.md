@@ -8,15 +8,20 @@ The purpose of this exercise is to learn basics of:
 * Perform basic status checks on the build and deployment
 
 ## Steps
+
+### Setup
+
 1. Fork this repo into your own git account. Make the fork public (to avoid dealing with Git credentials in Openshift)
 1. Clone your fork, e.g:   
 `$ git clone git@github.com:svejk-ciber/openshift-dockerfile-example.git`
-1. Log in to Openshift  
+1. Log in to Openshift as a developer  
    `$ oc login -u developer -p developer` # assuming Katacoda.
 1. Create a new project for the application:  
    `$ oc new-project docker-build`
-1. Create a new app:
+   
+### Create Openshift app and observe project status 
 
+1. Create a new app: `oc new-app ...`  
    ```
    $ oc new-app --name sleep  https://github.com/svejk-ciber/openshift-dockerfile-example.git
    ...
@@ -33,7 +38,7 @@ The purpose of this exercise is to learn basics of:
    You can also use the argument `--strategy=docker` to be explicit, but in this case there is no ambiguity, 
    since there are no other source files present than the Dockerfile, so Openshift should not choose a different build strategy than        _Docker_.
 
-1. Check status of the project
+1. Check status of the project: `oc status`
    ```shell
    $ oc status
    ...
@@ -46,11 +51,11 @@ The purpose of this exercise is to learn basics of:
    Should not indicate any problems, apart from missing Kubernetes probes. Folloe the tip about the `--suggest` 
    parameter to verify this.
   
-1. Briefly review the resources created by `new-app`:  
+1. Briefly review the resources created by `new-app`: `oc get all` 
    `$ oc get all`  
-   What resources did `new-app` create?
+   What resources did `new-app` create? 
 
-1. Check the build log for errors:
+1. Check the build log for errors: `oc logs bc/$APP`
    ```
    $ oc logs bc/sleep
    ...
@@ -58,7 +63,7 @@ The purpose of this exercise is to learn basics of:
    ```
    Observe that Openshift runs a Dockerfile build, and adds some metadata to the build image with
    `ENV` and `LABEL`instructions.
-1. Wait for the pod to become available:
+1. Wait for the pod to become available: `oc get pods`
    ```
    $ oc get pods -w
    NAME             READY   STATUS      RESTARTS   AGE
@@ -69,7 +74,7 @@ The purpose of this exercise is to learn basics of:
    The builder and deployer pods are done, and we are left with a single running pod, the one with just a build number and Docker 
    image suffix in the name.
  
-1. View the application log:
+1. View the application log: `oc log...`
    ```
    $ oc log sleep-1-8j65k
    ...
@@ -79,7 +84,7 @@ The purpose of this exercise is to learn basics of:
    ```
 
 1. Review resources created by Openshift
- 1. Look at the BuildConfiguration:
+ 1. Look at the BuildConfiguration: `oc describe bc $APP`
     ```
     $ oc describe bc sleep
     Name:           sleep
@@ -98,7 +103,7 @@ The purpose of this exercise is to learn basics of:
     and that the label `app` has been added with the value of the argument we gave to `oc new-app` previously.
     Also observe that the build configuration input and outputs looks as expected.
 
- 1. Inspect the image stream for the built image  
+ 1. Inspect the image stream for the built image: 'oc describe is $APP`  
     ```
     $ oc describe is sleep
     Name:                   sleep
@@ -112,7 +117,7 @@ The purpose of this exercise is to learn basics of:
     ```
     Observe that the built image is located in Openshift's internal registry. 
 
- 1. Inspect the deployment Configuration  
+ 1. Inspect the deployment Configuration: `oc describe dc $APP`  
     ``` 
     $ oc describe dc sleep
     Name:           sleep
@@ -141,11 +146,8 @@ The purpose of this exercise is to learn basics of:
 1. Check the log of the running container  
  `$ oc logs sleep-1...`
  
-1. Observe that `new-app` has created the following resources: one build configuration, one deployemnt configuration
-one replication controller, one build and two image streams (oc get bc|dc|is|rc|build|pod...)
-
 ### Change the application
-In this part, we modify the app, rebuilds it and observes that Openshift redeploys the changes.
+In this part, we modify the app, rebuild it and observes that Openshift redeploys the changes.
 
 1. Edit the `CMD` instruction in the Dockerfile to display a counter. The result should look similar to this  
    ```
@@ -165,7 +167,8 @@ build.build.openshift.io/sleep-2 started
 `$ oc logs -f bc/sleep`
 
 1. Verify that a new deployment got triggered by the build
-``` $ oc status
+``` 
+$ oc status
 In project docker-build on server https://openshift:6443
 
 dc/sleep deploys istag/sleep:latest <-
