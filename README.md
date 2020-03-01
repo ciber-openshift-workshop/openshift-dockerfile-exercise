@@ -78,8 +78,8 @@ The purpose of this exercise is to learn basics of:
    Sleep.
    ```
 
-1. Review resources created by Openshift:
- 1.1 Look at the BuildConfiguration:
+1. Review resources created by Openshift
+ 1. Look at the BuildConfiguration:
     ```
     $ oc describe bc sleep
     Name:           sleep
@@ -98,7 +98,7 @@ The purpose of this exercise is to learn basics of:
     and that the label `app` has been added with the value of the argument we gave to `oc new-app` previously.
     Also observe that the build configuration input and outputs looks as expected.
 
- 1.2 Inspect the image stream for the build image
+ 1. Inspect the image stream for the built image  
     ```
     $ oc describe is sleep
     Name:                   sleep
@@ -112,7 +112,7 @@ The purpose of this exercise is to learn basics of:
     ```
     Observe that the built image is located in Openshift's internal registry. 
 
- 1.3 Inspect the deployment Configuration
+ 1. Inspect the deployment Configuration  
     ``` 
     $ oc describe dc sleep
     Name:           sleep
@@ -133,35 +133,38 @@ The purpose of this exercise is to learn basics of:
        Image:              image-registry.openshift-image-registry.svc:5000/docker-   build/sleep@sha256:237b14f609d3ab452f7f45ba149119a5d1c97324757e8b29a0acb55b4bc8752f
    ...
    ```
-    Note that the deployment config has a trigger in the image stream we looked at before. If the image and thus 
-image stream changes, a new deployment is performed. It is possible to use the hash of the Docker image to 
-identify the image version during troubleshooting and rollbacks (since the `latest` tag gets replaced every 
-time we push a new image version to the internal registry)
+   Note that the deployment config has a trigger in the image stream we looked at before. If the image and 
+   thus image stream changes, a new deployment is performed. It is possible to use the hash of the Docker 
+   image to identify the image version during troubleshooting and rollbacks (since the `latest` tag gets 
+   replaced every time we push a new image version to the internal registry)
 
-1. Check the log of the running container:
-  `$ oc logs sleep-1...`
+1. Check the log of the running container  
+ `$ oc logs sleep-1...`
+ 
 1. Observe that `new-app` has created the following resources: one build configuration, one deployemnt configuration
 one replication controller, one build and two image streams (oc get bc|dc|is|rc|build|pod...)
 
-2. Change the application
+### Change the application
+In this part, we modify the app, rebuilds it and observes that Openshift redeploys the changes.
 
-2.1 Edit the `CMD` instruction in the Dockerfile to display a counter. The result should look similar to this
-```
-FROM bash:5.0.11
+1. Edit the `CMD` instruction in the Dockerfile to display a counter. The result should look similar to this  
+   ```
+   FROM bash:5.0.11
+   
+   CMD ["bash", "-c", "while true; do (( i++ )); echo 'Sleep $i.'; sleep 3; done"]
+   ```
+1. Commit and push the result on your Git fork.
 
-CMD ["bash", "-c", "while true; do (( i++ )); echo 'Sleep $i.'; sleep 3; done"]
-```
-2.2 Commit and push the result on your Git fork.
-
-2.3 Rebuild the app in Openshift
+1. Rebuild the app in Openshift
+We must start a build manually, in this case, since there are no CI/CD triggers enabled in the BuildConfig.
 ```
 $ oc start-build sleep
 build.build.openshift.io/sleep-2 started
 ```
-2.4 Check the build logs as above
+1. Check the build logs as above
 `$ oc logs -f bc/sleep`
 
-2.5 Verify that a new deployment got triggered by the build
+1. Verify that a new deployment got triggered by the build
 ``` $ oc status
 In project docker-build on server https://openshift:6443
 
@@ -171,11 +174,12 @@ dc/sleep deploys istag/sleep:latest <-
   deployment #1 deployed 27 minutes ago
 ...
 ```
-2.6 Wait for the app pod to be available: `$ oc get pod ...` as above
-Note that here are now pods of version 1 and 2 of the builds performed. In the end,
-only the newly built image pod of the latest build (2), should be kept running.
 
-2.7 View the application log to observe changes
+1. Wait for the app pod to be available: `$ oc get pod ...` as above  
+ Note that here are now pods of version 1 and 2 of the builds performed. In the end,
+ only the newly built image pod of the latest build (2), should be kept running.
+
+1. View the application log again
 ```
 $ oc log sleep-2-2zffm...
 ...
@@ -184,16 +188,22 @@ Sleep 9
 Sleep 10
 ...
 ```
-2.8 Inspect the image stream for the outpur image as above.
-Observe that there are now multiple versions of the image in play of the Docker tag `latest`, 
-and that the is currently points to the last built image, by SHA256 hash.
+1. Inspect the image stream for the output image as above.
+Observe that there are now multiple versions of the image in play on the Docker tag `latest`, 
+and that the stream currently points to the last built image, by SHA256 hash.
 
 
-3. Cleanup
-3.1 `$ oc delete all -l app=sleep`
+### Cleanup
+You can skip this step if you are using an ephemeral environment like [Katacoda](https://www.katacoda.com/openshift/courses/playgrounds/openshift42). But it's probably 
+useful to practice it at least once, since it's frequently used to clear out a failed 
+deployment.
 
-3.2 `$ oc get all`
-Should indicate that there are no resources left in the project.
+1. `oc delete all`: Delete most resources created by `oc new-app` from the project:  
+ `$ oc delete all -l app=sleep`
 
-3.2 Delete the project 
-`$ oc delete project docker-build`
+1. Verify that resources are gone:  
+ `$ oc get all`  
+ Should indicate that there are no resources left in the project.
+
+1. `oc delete project`: Delete the project   
+ `$ oc delete project docker-build`
